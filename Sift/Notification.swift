@@ -50,7 +50,7 @@ extension AppDelegate {
         
         do {
             try RuleManager().create(rule: rule)
-            try NetCache(appIdentifier: app).cache.removeAllObjects()
+//            try NetCache(appIdentifier: app).cache.removeAllObjects()
             AppDelegate.removeNotifications(for: app)
         } catch {
             print("error saving rule: \(error)")

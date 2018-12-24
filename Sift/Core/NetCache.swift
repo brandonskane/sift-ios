@@ -7,12 +7,12 @@
 //
 
 import Foundation
-import AwesomeCache
+//import AwesomeCache
 
 class NetCache {
     
     let appIdentifier:String
-    let cache:Cache<NSString>
+//    let cache:Cache<NSString>
     
     enum Errors:Error {
         case missingSharedGroupDirectory
@@ -28,6 +28,6 @@ class NetCache {
             throw Errors.missingSharedGroupDirectory
         }
 
-        self.cache = try Cache<NSString>(name: appIdentifier, directory: groupDirectory)
+//        self.cache = try Cache<NSString>(name: appIdentifier, directory: groupDirectory)
     }
 }

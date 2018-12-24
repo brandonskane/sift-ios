@@ -37,7 +37,7 @@ class FilterControlProvider: NEFilterControlProvider {
         
         do {
             let id = uniqueIdentifier(of: app, host)
-            try NetCache(appIdentifier: app).cache.setObject(host as NSString, forKey: id)
+//            try NetCache(appIdentifier: app).cache.setObject(host as NSString, forKey: id)
 
             guard let rule = try RuleManager().getRule(for: app, hostname: host) else {
                 fireNotification(app: app, hostname: host)

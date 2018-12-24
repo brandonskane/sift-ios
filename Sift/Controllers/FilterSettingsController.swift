@@ -21,6 +21,7 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
 
     var rules:[(AppName, [Rule])] = []
     var filteredRules:[(AppName, [Rule])] = []
+    var appNames: [String] = []
 
     var isSearching:Bool = false
     
@@ -40,18 +41,18 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
             pushControl.selectedSegmentIndex = 1
         }
         
-        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 120
         
         if let font = UIFont(name: "FiraSans-Regular", size: 16) {
-            UISegmentedControl.appearance().setTitleTextAttributes([NSAttributedStringKey.font: font], for: .normal)
-            UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).defaultTextAttributes = [
-                NSAttributedStringKey.font.rawValue: font,
-                NSAttributedStringKey.foregroundColor.rawValue: UIColor.white
-            ]
-            UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).attributedPlaceholder = NSAttributedString(string: "Filter apps and hosts", attributes: [NSAttributedStringKey.font: font, NSAttributedStringKey.foregroundColor: UIColor.lightGray])
+            UISegmentedControl.appearance().setTitleTextAttributes([NSAttributedString.Key.font: font], for: .normal)
+            UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).defaultTextAttributes = convertToNSAttributedStringKeyDictionary([
+                NSAttributedString.Key.font.rawValue: font,
+                NSAttributedString.Key.foregroundColor.rawValue: UIColor.white
+            ])
+            UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).attributedPlaceholder = NSAttributedString(string: "Filter apps and hosts", attributes: [NSAttributedString.Key.font: font, NSAttributedString.Key.foregroundColor: UIColor.lightGray])
             
-            UIBarButtonItem.appearance().setTitleTextAttributes([NSAttributedStringKey.font: font], for: .normal)
+            UIBarButtonItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: font], for: .normal)
         }
     
         NotificationCenter.default.addObserver(self, selector: #selector(FilterSettingsController.reload), name: Constants.ObservableNotification.appBecameActive.name, object: nil)
@@ -206,6 +207,9 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
             newRules.append(("Host Rules", hostRules))
             
             self.rules = newRules
+            self.rules.sort(by: {$0.0.commonName.lowercased() < $1.0.commonName.lowercased()})
+//            self.rules = self.rules.filter { !$0.0.contains("com.apple") }
+            let unique = self.rules.map { $0.0.commonName.prefix(1).uppercased() }.sorted()
             
             DispatchQueue.main.async {
                 if self.rules.count == 2 {
@@ -214,6 +218,7 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
                     self.resetButton.isHidden = false
                 }
                 
+                self.appNames = unique
                 self.tableView.reloadData()
                 self.refresh.endRefreshing()
             }
@@ -327,6 +332,9 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
         return rules[section].1.count
     }
     
+    override func sectionIndexTitles(for tableView: UITableView) -> [String]? {
+        return appNames
+    }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let rules = isSearching ? filteredRules : self.rules;
         
@@ -354,7 +362,7 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
         let rule = rules[indexPath.section].1[indexPath.row]
         
         
-        let deleteAction = UITableViewRowAction(style: UITableViewRowActionStyle.default, title: "Delete", handler: { (action, indexPath) in
+        let deleteAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Delete", handler: { (action, indexPath) in
             
             try? RuleManager().delete(rule: rule)
             self.loadRules()
@@ -365,7 +373,7 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
         var actions = [deleteAction]
 
         if rule.isAllowed {
-            let action = UITableViewRowAction(style: UITableViewRowActionStyle.default, title: "Drop", handler: { (action, indexPath) in
+            let action = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Drop", handler: { (action, indexPath) in
                 
                 try? RuleManager().toggle(rule: rule)
                 self.loadRules()
@@ -373,7 +381,7 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
             action.backgroundColor = AppColors.deny.color
             actions.append(action)
         } else {
-            let action = UITableViewRowAction(style: UITableViewRowActionStyle.default, title: "Allow", handler: { (action, indexPath) in
+            let action = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Allow", handler: { (action, indexPath) in
                 
                 try? RuleManager().toggle(rule: rule)
                 self.loadRules()
@@ -427,7 +435,7 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
             }
 
             
-            alertController.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: { (action:UIAlertAction) -> Void in
+            alertController.addAction(UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel, handler: { (action:UIAlertAction) -> Void in
                 
             }))
             
@@ -465,4 +473,9 @@ class RuleCell:UITableViewCell {
         }
     }
     
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToNSAttributedStringKeyDictionary(_ input: [String: Any]) -> [NSAttributedString.Key: Any] {
+	return Dictionary(uniqueKeysWithValues: input.map { key, value in (NSAttributedString.Key(rawValue: key), value)})
 }

@@ -17,7 +17,7 @@ class AboutController:UIViewController {
         super.viewDidLoad()
         self.navigationItem.setNavLogo()
 
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.action, target: self, action: #selector(AboutController.shareTapped))
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.action, target: self, action: #selector(AboutController.shareTapped))
         
         if  let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
             self.versionLabel.text = "Version \(version)"
@@ -49,7 +49,7 @@ class AboutController:UIViewController {
     
     func openURL(url string:String) {
         if let url = URL(string: string) {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            UIApplication.shared.open(url, options: convertToUIApplicationOpenExternalURLOptionsKeyDictionary([:]), completionHandler: nil)
         }
     }
     
@@ -64,4 +64,9 @@ class AboutController:UIViewController {
     @IBAction func developerTapped() {
         openURL(url: Constants.WebsiteEndpoints.developer.url)
     }
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToUIApplicationOpenExternalURLOptionsKeyDictionary(_ input: [String: Any]) -> [UIApplication.OpenExternalURLOptionsKey: Any] {
+	return Dictionary(uniqueKeysWithValues: input.map { key, value in (UIApplication.OpenExternalURLOptionsKey(rawValue: key), value)})
 }

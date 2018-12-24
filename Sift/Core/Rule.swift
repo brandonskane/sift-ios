@@ -9,13 +9,13 @@
 import Foundation
 
 struct Rule {
-    let ruleType:RuleType
-    let isAllowed:Bool
-    let date:Date
+    let ruleType: RuleType
+    let isAllowed: Bool
+    let date: Date
 }
 
 extension Rule {
-    init(ruleType:RuleType, isAllowed:Bool) {
+    init(ruleType: RuleType, isAllowed: Bool) {
         self.init(ruleType: ruleType, isAllowed: isAllowed, date: Date())
     }
 }
@@ -29,7 +29,7 @@ enum RuleType {
 
 typealias AppName = String
 extension AppName {    
-    var commonName:String {
+    var commonName: String {
         return self.components(separatedBy: ".").last ?? self
     }
 }

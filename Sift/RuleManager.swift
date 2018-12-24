@@ -139,6 +139,8 @@ class RuleManager {
         var rules:[Rule] = []
         
         let request:NSFetchRequest<DataRule> = DataRule.fetchRequest()
+//        request.predicate = NSSortDescriptor(keyPath: #keyPath(Rule.ruleType.typeAndValue.0.commonName), ascending: true)
+
 
         try performAndWait {
             let dataRules = try self.managedObjectContext.fetch(request)
