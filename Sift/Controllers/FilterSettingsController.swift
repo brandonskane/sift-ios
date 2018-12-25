@@ -207,9 +207,9 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
             newRules.append(("Host Rules", hostRules))
             
             self.rules = newRules
-            self.rules.sort(by: {$0.0.commonName.lowercased() < $1.0.commonName.lowercased()})
+//            self.rules.sort(by: {$0.0.commonName.lowercased() < $1.0.commonName.lowercased()})
 //            self.rules = self.rules.filter { !$0.0.contains("com.apple") }
-            let unique = self.rules.map { $0.0.commonName.prefix(1).uppercased() }.sorted()
+//            let unique = self.rules.map { $0.0.commonName.prefix(1).uppercased() }.sorted()
             
             DispatchQueue.main.async {
                 if self.rules.count == 2 {
@@ -438,6 +438,13 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
             alertController.addAction(UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel, handler: { (action:UIAlertAction) -> Void in
                 
             }))
+            
+            //iPad support
+            if let presenter = alertController.popoverPresentationController {
+                let cell = tableView.cellForRow(at: indexPath) as! RuleCell
+                presenter.sourceView = cell.allowedLabel
+                presenter.sourceRect = cell.allowedLabel.bounds
+            }
             
             self.present(alertController, animated: true, completion: nil)
         }
