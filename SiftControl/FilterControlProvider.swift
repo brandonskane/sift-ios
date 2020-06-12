@@ -2,62 +2,93 @@
 //  FilterControlProvider.swift
 //  SiftControl
 //
-//  Created by Alex Grinman on 12/23/17.
-//  Copyright © 2017 Alex Grinman. All rights reserved.
+//  Created by Brandon Kane on 12/23/17.
+//  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 
 import NetworkExtension
 import UserNotifications
+import os.log
 
 class FilterControlProvider: NEFilterControlProvider {
     let mutex = Mutex()
     
     override func startFilter(completionHandler: @escaping (Error?) -> Void) {
-        // Add code to initialize the filter
         completionHandler(nil)
     }
     
     override func stopFilter(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
-        // Add code to clean up filter resources
         completionHandler()
     }
     
     override func handleNewFlow(_ flow: NEFilterFlow, completionHandler: @escaping (NEFilterControlVerdict) -> Void) {
-        // Add code to determine if the flow should be dropped or not, downloading new rules if required
-        guard  let app = flow.sourceAppIdentifier
+        print("handleNewFlow")
+        guard let appBundleId = flow.sourceAppIdentifier
         else {
             completionHandler(.allow(withUpdateRules: false))
             return
         }
         
-        guard let host = flow.getHost() else {
+        guard let hostname = flow.getHost() else {
             completionHandler(.allow(withUpdateRules: false))
             return
         }
         
-        do {
-            let id = uniqueIdentifier(of: app, host)
-//            try NetCache(appIdentifier: app).cache.setObject(host as NSString, forKey: id)
-
-            guard let rule = try RuleManager().getRule(for: app, hostname: host) else {
-                fireNotification(app: app, hostname: host)
-                try RuleManager().create(rule: Rule(ruleType: RuleType.hostFromApp(host: host, app: app), isAllowed: true))
+        DispatchQueue.main.async {
+            let app = Database.shared.getApp(bundleId: appBundleId)
+                
+            if let existingHost = Database.shared.getHost(hostname: hostname,
+                                                          ifExistsOnly: true) {
+                if existingHost.isAllowed {
+                    completionHandler(.allow(withUpdateRules: false))
+                } else {
+                    completionHandler(.drop(withUpdateRules: false))
+                }
+                
+                if !existingHost.apps.contains(app) {
+                    Database.shared.addHostToAppListFor(app: app, host: existingHost)
+                }
+                
+            } else {
+                if !(UserDefaults.group?.bool(forKey: Constants.pushActivityKey) ?? false) {
+                    self.fireNotification(app: appBundleId, hostname: hostname)
+                }
+                let newHost = Database.shared.createHost(hostname: hostname)
+                Database.shared.addHostToAppListFor(app: app, host: newHost)
                 completionHandler(.allow(withUpdateRules: true))
-                return
             }
             
-            if !(UserDefaults.group?.bool(forKey: Constants.pushActivityKey) ?? false) {
-                fireNotification(app: app, hostname: host)
-            }
+//            if !host.isAllowed && !host.apps.contains(app) {
+//                Database.shared.addHostToAppListFor(app: app, host: host)
+//                completionHandler(.drop(withUpdateRules: false))
+//            } else if !host.isAllowed && host.apps.contains(app) {
+//                completionHandler(.drop(withUpdateRules: false))
+//            } else if host.isAllowed && host.apps.contains(app) {
+//                completionHandler(.allow(withUpdateRules: false))
+//            } else {
+//                Database.shared.addHostToAppListFor(app: app, host: host)
+//                completionHandler(.allow(withUpdateRules: false))
+//            }
             
-            let verdict:NEFilterControlVerdict = rule.isAllowed ? .allow(withUpdateRules: false) : .drop(withUpdateRules: false)
-            completionHandler(verdict)
-            
-        } catch {
-            fireErrorNotification(error: "\(error)")
-            completionHandler(.allow(withUpdateRules: false))
+//            if !host.isAllowed {
+//                if host.blockedApps.contains(app) {
+//                    //block
+//                    completionHandler(.drop(withUpdateRules: false))
+//                } else if host.allowedApps.contains(app) {
+//                    //allow
+//                    completionHandler(.allow(withUpdateRules: false))
+//                } else {
+//                    Database.shared.addBlockedAppTo(host: host, app: app)
+//                    //block
+//                    completionHandler(.drop(withUpdateRules: true))
+//                }
+//            } else if !host.allowedApps.contains(app) {
+//                Database.shared.addAppToAllowedListFor(host: host, app: app)
+//                Database.shared.addHostToAppListFor(app: app, host: host)
+//                //allow
+//                completionHandler(.allow(withUpdateRules: true))
+//            }
         }
-        
     }
     
     func fireNotification(app:String, hostname:String) {

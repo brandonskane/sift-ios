@@ -2,8 +2,8 @@
 //  OnboardingController.swift
 //  Sift
 //
-//  Created by Alex Grinman on 1/4/18.
-//  Copyright © 2018 Alex Grinman. All rights reserved.
+//  Created by Brandon Kane on 1/4/18.
+//  Copyright © 2018 Brandon Kane. All rights reserved.
 //
 
 import Foundation
@@ -11,10 +11,10 @@ import UIKit
 import NetworkExtension
 import UserNotifications
 
-class OBNetworkPermissionsController:UIViewController {
+class OBNetworkPermissionsController: UIViewController {
     
-    @IBOutlet weak var enabledNetSwitch:UISwitch!
-    @IBOutlet weak var enabledPushSwitch:UISwitch!
+    @IBOutlet weak var enabledNetSwitch: UISwitch!
+    @IBOutlet weak var enabledPushSwitch: UISwitch!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -95,8 +95,6 @@ class OBTutorialController:UIViewController {
         super.viewDidLoad()        
         UserDefaults.standard.set(true, forKey: Constants.onboardingKey)
     }
-    
-    
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)

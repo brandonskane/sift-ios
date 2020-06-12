@@ -2,8 +2,8 @@
 //  AboutController.swift
 //  Sift
 //
-//  Created by Alex Grinman on 6/4/18.
-//  Copyright © 2018 Alex Grinman. All rights reserved.
+//  Created by Brandon Kane on 6/4/18.
+//  Copyright © 2018 Brandon Kane. All rights reserved.
 //
 
 import Foundation

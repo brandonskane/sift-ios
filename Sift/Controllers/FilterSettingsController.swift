@@ -2,8 +2,8 @@
 //  ViewController.swift
 //  Sift
 //
-//  Created by Alex Grinman on 12/23/17.
-//  Copyright © 2017 Alex Grinman. All rights reserved.
+//  Created by Brandon Kane on 12/23/17.
+//  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 
 import UIKit
@@ -25,7 +25,7 @@ class FilterSettingsController: UITableViewController, UISearchBarDelegate {
 
     var isSearching:Bool = false
     
-    var timer:Timer?
+    var timer: Timer?
     let refresh = UIRefreshControl()
     
     override func viewDidLoad() {

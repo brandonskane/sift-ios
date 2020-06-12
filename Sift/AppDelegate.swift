@@ -2,8 +2,8 @@
 //  AppDelegate.swift
 //  Sift
 //
-//  Created by Alex Grinman on 12/23/17.
-//  Copyright © 2017 Alex Grinman. All rights reserved.
+//  Created by Brandon Kane on 12/23/17.
+//  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 
 import UIKit
@@ -18,6 +18,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        Database.shared
+        RulePreloader().loadAdRules()
+//        RulePreloader().loadTrackerRules()
+//        RulePreloader().loadAnalyticsRules()
+//        RulePreloader().printRules()
         
         UNUserNotificationCenter.current().delegate = self
         

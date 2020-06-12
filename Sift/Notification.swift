@@ -2,8 +2,8 @@
 //  Notification.swift
 //  Sift
 //
-//  Created by Alex Grinman on 12/24/17.
-//  Copyright © 2017 Alex Grinman. All rights reserved.
+//  Created by Brandon Kane on 12/24/17.
+//  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 
 import Foundation
@@ -50,7 +50,6 @@ extension AppDelegate {
         
         do {
             try RuleManager().create(rule: rule)
-//            try NetCache(appIdentifier: app).cache.removeAllObjects()
             AppDelegate.removeNotifications(for: app)
         } catch {
             print("error saving rule: \(error)")
