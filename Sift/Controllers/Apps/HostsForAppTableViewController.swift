@@ -1,5 +1,5 @@
 //
-//  AppsTableViewController.swift
+//  HostsForAppTableViewController.swift
 //  Sift
 //
 //  Created by Brandon Kane on 6/7/20.
@@ -8,24 +8,24 @@
 
 import UIKit
 import RealmSwift
-import Kingfisher
 
-class AppsTableViewController: UITableViewController {
+class HostsForAppTableViewController: UITableViewController {
     
     var notificationToken: NotificationToken? = nil
-    
     var realm : Realm!
-    var results: Results<App>!
-
+    var results: List<Host>!
+    var bundleId: String!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationController?.navigationBar.prefersLargeTitles = true
         configure()
     }
     
     func configure() {
         realm = try! Realm()
-        results = realm.objects(App.self).sorted(byKeyPath: "commonName", ascending: true)
+        let app = realm.objects(App.self).filter("bundleId = '\(bundleId!)'").first!
+        results = app.hosts
+        title = app.commonName
         
         notificationToken = results.observe { [weak self] (changes: RealmCollectionChange) in
             guard let tableView = self?.tableView else { return }
@@ -46,7 +46,6 @@ class AppsTableViewController: UITableViewController {
                                      with: .automatic)
                 tableView.endUpdates()
             case .error(let error):
-                // An error occurred while opening the Realm file on the background worker thread
                 fatalError("\(error)")
             }
         }
@@ -61,49 +60,47 @@ class AppsTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return results.count
     }
-
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "appCell", for: indexPath) as! AppTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "hostCell", for: indexPath)
 
-        let app = results[indexPath.row]
-        cell.configureCellFor(app: app)
-        
+        cell.textLabel?.text = results[indexPath.row].hostname
+        cell.detailTextLabel?.text = results[indexPath.row].isAllowed ? "✅" : "❌"
+
         return cell
     }
     
-        override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
+    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
 
-            let app = results[indexPath.row]
+        let host = results[indexPath.row]
 
-            var actions: [UITableViewRowAction] = []
-            
-            let edit = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Edit Common Name", handler: { (action, indexPath) in
-                
-                let alertController =  UIAlertController(title: "Update Common Name", message: "Update the common name for this application", preferredStyle: .alert)
-                
-                alertController.addTextField { (textField : UITextField!) -> Void in
-                    textField.placeholder = "New Common Name"
-                }
-                
-                alertController.addAction(UIAlertAction(title: "Reset", style: .default, handler: { (alert) in
-                    Database.shared.updateCommonNameFor(app: app)
-                }))
-                
-                alertController.addAction(UIAlertAction(title: "Save", style: .default, handler: { (alert) in
-                    let text = alertController.textFields![0].text!
-                    Database.shared.updateCommonNameFor(app: app, commonName: text)
-                    
-                }))
-                alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-                
-                self.present(alertController, animated: true, completion: nil)
+        var actions: [UITableViewRowAction] = []
+
+        if host.isAllowed {
+            let blockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Block", handler: { (action, indexPath) in
+                Database.shared.markHostAsBlocked(host: host)
             })
 
-            edit.backgroundColor = AppColors.allow.color
-            actions.append(edit)
+            blockAction.backgroundColor = AppColors.deny.color
+            actions.append(blockAction)
 
-            return actions
+            let evaulateAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Evaulate", handler: { (action, indexPath) in
+                Database.shared.markHostAsEvaulated(host: host)
+            })
+
+            evaulateAction.backgroundColor = AppColors.allow.color
+            actions.append(evaulateAction)
+        } else {
+            let unblockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Unblock", handler: { (action, indexPath) in
+                Database.shared.markHostAsUnblocked(host: host)
+            })
+
+            unblockAction.backgroundColor = AppColors.allow.color
+            actions.append(unblockAction)
         }
+
+        return actions
+    }
 
     /*
     // Override to support conditional editing of the table view.
@@ -140,17 +137,14 @@ class AppsTableViewController: UITableViewController {
     }
     */
 
-    
+    /*
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "hostsForApp" {
-            let destinationController = segue.destination as! HostsForAppTableViewController
-            let app = results[tableView.indexPathForSelectedRow!.row]
-            destinationController.bundleId = app.bundleId
-        }
+        // Get the new view controller using segue.destination.
+        // Pass the selected object to the new view controller.
     }
-    
+    */
 
 }

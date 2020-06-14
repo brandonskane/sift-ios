@@ -2,7 +2,7 @@
 //  Notification.swift
 //  Sift
 //
-//  Created by Brandon Kane on 12/24/17.
+//  Created by Brandon Kane on 6/7/20.
 //  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 
@@ -13,14 +13,14 @@ import UserNotifications
 extension AppDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         
-        guard   response.notification.request.content.categoryIdentifier == Constants.notificationCategory,
+        guard response.notification.request.content.categoryIdentifier == Constants.notificationCategory,
                 let app = response.notification.request.content.userInfo["app"] as? String
         else {
             completionHandler()
             return
         }
         
-        var rule:Rule
+        var rule: Rule
 
         guard let action = Constants.NotificationAction(rawValue: response.actionIdentifier)
         else {
@@ -49,7 +49,7 @@ extension AppDelegate {
         }
         
         do {
-            try RuleManager().create(rule: rule)
+//            try RuleManager().create(rule: rule)
             AppDelegate.removeNotifications(for: app)
         } catch {
             print("error saving rule: \(error)")
@@ -74,7 +74,7 @@ extension AppDelegate {
     }
 }
 class Notifications {
-    static var authorizeCategory:UNNotificationCategory = {
+    static var authorizeCategory: UNNotificationCategory = {
         return UNNotificationCategory(identifier: Constants.notificationCategory,
                                       actions: [Notifications.edit,
                                                 Notifications.denyAllApp],
@@ -84,7 +84,7 @@ class Notifications {
     }()
     
     
-    static var edit:UNNotificationAction = {
+    static var edit: UNNotificationAction = {
         return UNNotificationAction(identifier: Constants.NotificationAction.edit.id,
                                     title: "Edit rules",
                                     options: .foreground)

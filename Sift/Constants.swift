@@ -2,7 +2,7 @@
 //  Constants.swift
 //  Sift
 //
-//  Created by Brandon Kane on 12/24/17.
+//  Created by Brandon Kane on 6/7/20.
 //  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 
@@ -46,15 +46,15 @@ struct Constants {
         }
     }
     
-    static let appURL:String = "https://getsift.app"
-    static let promoText:String = "Sift uncovers what apps are really doing on your phone."
+    static let appURL: String = "https://getsift.app"
+    static let promoText: String = "Sift uncovers what apps are really doing on your phone."
     
-    enum WebsiteEndpoints:String {
+    enum WebsiteEndpoints: String {
         case faq = "faq"
         case privacy = "privacy"
         case developer = "developer"
         
-        var url:String {
+        var url: String {
             return "\(Constants.appURL)/\(self.rawValue)"
         }
     }
@@ -62,13 +62,12 @@ struct Constants {
 }
 
 extension UserDefaults {
-    static var  group:UserDefaults? {
+    static var group: UserDefaults? {
         return UserDefaults(suiteName: Constants.appGroupIdentifier)
     }
 }
 
-func dispatchAfter(delay:Double, task:@escaping ()->Void) {
-    
+func dispatchAfter(delay: Double, task: @escaping () -> Void) {
     let delay = DispatchTime.now() + Double(Int64(delay * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)
     
     DispatchQueue.main.asyncAfter(deadline: delay) {

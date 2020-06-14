@@ -36,7 +36,7 @@ class Host: Object {
     @objc dynamic var isAllowed = true
     @objc dynamic var evaulated = false
     @objc dynamic var blockCount = 0
-    @objc dynamic var lastSeen = Date()
+    @objc dynamic var lastSeen = Date() //rename to first seen
     @objc dynamic var category: String? = nil
     let allowedApps = List<App>()
     let blockedApps = List<App>()

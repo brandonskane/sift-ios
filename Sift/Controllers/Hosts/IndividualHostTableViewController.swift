@@ -1,5 +1,5 @@
 //
-//  HostsForAppTableViewController.swift
+//  IndividualHostTableViewController.swift
 //  Sift
 //
 //  Created by Brandon Kane on 6/7/20.
@@ -9,23 +9,15 @@
 import UIKit
 import RealmSwift
 
-class HostsForAppTableViewController: UITableViewController {
-    
-    var realm : Realm!
-    var results: List<Host>!
-    var bundleId: String!
+class IndividualHostTableViewController: UITableViewController {
+
+    var allowedApps: List<App>!
+    var blockedApps: List<App>!
+    var host: Host!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        configure()
-    }
-    
-    func configure() {
-        realm = try! Realm()
-        let app = realm.objects(App.self).filter("bundleId = '\(bundleId!)'").first!
-        results = app.hosts
-//        navigationController?.navigationBar.prefersLargeTitles = false
-        title = app.commonName
+        title = host.hostname
     }
 
     // MARK: - Table view data source
@@ -33,22 +25,56 @@ class HostsForAppTableViewController: UITableViewController {
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
+    
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if section == 0 {
+            return "Apps"
+        } else {
+            return "Blocked Apps"
+        }
+    }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return results.count
+        if section == 0 {
+            return host.apps.count
+        } else {
+            return blockedApps.count
+        }
     }
 
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "hostCell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "appCell", for: indexPath)
 
-        cell.textLabel?.text = results[indexPath.row].hostname
-        cell.detailTextLabel?.text = results[indexPath.row].evaulated ? "👍" : "🤷🏻‍♂️"
-
+        if indexPath.section == 0 {
+            cell.textLabel?.text = host.apps[indexPath.row].bundleId
+        } else {
+            cell.textLabel?.text = blockedApps[indexPath.row].bundleId
+        }
+        
         return cell
     }
-    
 
+    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
+        
+        var actions: [UITableViewRowAction] = []
+        
+        if indexPath.section == 0 {
+            let blockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Block", handler: { (action, indexPath) in
+            })
+            
+            blockAction.backgroundColor = AppColors.deny.color
+            actions.append(blockAction)
+        } else {
+            let unblockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Unblock", handler: { (action, indexPath) in
+            })
+            
+            unblockAction.backgroundColor = AppColors.allow.color
+            actions.append(unblockAction)
+        }
+        
+        return actions
+    }
+    
     /*
     // Override to support conditional editing of the table view.
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {

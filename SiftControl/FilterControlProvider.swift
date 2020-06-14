@@ -2,7 +2,7 @@
 //  FilterControlProvider.swift
 //  SiftControl
 //
-//  Created by Brandon Kane on 12/23/17.
+//  Created by Brandon Kane on 6/7/20.
 //  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 
@@ -11,7 +11,6 @@ import UserNotifications
 import os.log
 
 class FilterControlProvider: NEFilterControlProvider {
-    let mutex = Mutex()
     
     override func startFilter(completionHandler: @escaping (Error?) -> Void) {
         completionHandler(nil)
@@ -35,7 +34,7 @@ class FilterControlProvider: NEFilterControlProvider {
         }
         
         DispatchQueue.main.async {
-            let app = Database.shared.getApp(bundleId: appBundleId)
+            let app = Database.shared.getApp(bundleId: appBundleId)!
                 
             if let existingHost = Database.shared.getHost(hostname: hostname,
                                                           ifExistsOnly: true) {

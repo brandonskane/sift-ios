@@ -11,24 +11,53 @@ import RealmSwift
 import NetworkExtension
 
 class HostsTableViewController: UITableViewController {
+   
+    enum HostSorter {
+        case hostname, blocked, evaulated, category
+        
+        var sortDescriptor: SortDescriptor {
+            switch self {
+            case .hostname: return SortDescriptor(keyPath: #keyPath(Host.hostname),
+                                                  ascending: true)
+            case .blocked: return SortDescriptor(keyPath: #keyPath(Host.isAllowed),
+                                                 ascending: false)
+            case .evaulated: return SortDescriptor(keyPath: #keyPath(Host.evaulated),
+                                                   ascending: false)
+            case .category: return SortDescriptor(keyPath: #keyPath(Host.category),
+                                                  ascending: false)
+            }
+        }
+    }
     
-    enum Filter {
-        case evaluated, unevaluated, blocked, unblocked, apps
+    enum HostFilterPredicate {
+        case none, evaluated, unevaluated, blocked, unblocked
+        
+        var predicate: NSPredicate? {
+            
+            switch self {
+            case .none: return nil
+            case .evaluated: return  NSPredicate(format: "evaulated = true")
+            case .unevaluated: return NSPredicate(format: "evaulated = false")
+            case .blocked: return  NSPredicate(format: "isAllowed = false")
+            case .unblocked: return NSPredicate(format: "isAllowed = true")
+            }
+        }
+        
     }
 
     var notificationToken: NotificationToken? = nil
-    
     var realm : Realm!
     var results: Results<Host>!
-    var evaluatedOnly = false
+
+    var predicate: NSPredicate?
+    var sortDescripter: SortDescriptor = HostSorter.hostname.sortDescriptor
+    
+    let searchController = UISearchController(searchResultsController: nil)
     
     @IBOutlet var filterEnabledSwitch: UISwitch! {
         didSet {
             NEFilterManager.shared().loadFromPreferences { error in
-                if let _ = error {
-                    self.filterEnabledSwitch.isOn = false
-                    return
-                }
+                if let _ = error { return (self.filterEnabledSwitch.isOn = false) }
                 self.filterEnabledSwitch.isOn = NEFilterManager.shared().isEnabled
             }
         }
@@ -36,8 +65,14 @@ class HostsTableViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        checkForOnboarding()
+        searchController.searchResultsUpdater = self
+        searchController.hidesNavigationBarDuringPresentation = false
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.sizeToFit()
+        navigationItem.searchController = searchController
+    
         navigationController?.navigationBar.prefersLargeTitles = true
+        checkForOnboarding()
         configure()
     }
     
@@ -48,9 +83,10 @@ class HostsTableViewController: UITableViewController {
     
     func configure() {
         realm = try! Realm()
-        results = realm.objects(Host.self)
-        if evaluatedOnly {
-            results = results.filter("evaulated = true")
+        
+        results = realm.objects(Host.self).sorted(by: [sortDescripter])
+        if let predicate = predicate {
+            results = results.filter(predicate)
         }
         
         notificationToken = results.observe { [weak self] (changes: RealmCollectionChange) in
@@ -77,25 +113,72 @@ class HostsTableViewController: UITableViewController {
         notificationToken?.invalidate()
     }
     
-    func updateFilter() {
+    func updateQuery() {
         notificationToken?.invalidate()
-        evaluatedOnly = !evaluatedOnly
         configure()
-        shareSheet()
     }
     
     func filterOptions() {
         let actionSheet = UIAlertController(title: "Filter", message: "Filter Options", preferredStyle: .actionSheet)
         
+        actionSheet.addAction(UIAlertAction(title: "None", style: .default, handler: { (alert) in
+            self.predicate = HostFilterPredicate.none.predicate
+            self.updateQuery()
+        }))
+        
         actionSheet.addAction(UIAlertAction(title: "Evaluated", style: .default, handler: { (action) in
-            
+            self.predicate = HostFilterPredicate.evaluated.predicate
+            self.updateQuery()
+        }))
+        
+        actionSheet.addAction(UIAlertAction(title: "Unevaluated", style: .default, handler: { (action) in
+            self.predicate = HostFilterPredicate.unevaluated.predicate
+            self.updateQuery()
         }))
         
         actionSheet.addAction(UIAlertAction(title: "Blocked", style: .default, handler: { (alert) in
-            
+            self.predicate = HostFilterPredicate.blocked.predicate
+            self.updateQuery()
         }))
+        
+        actionSheet.addAction(UIAlertAction(title: "Unblocked", style: .default, handler: { (alert) in
+            self.predicate = HostFilterPredicate.unblocked.predicate
+            self.updateQuery()
+        }))
+        
+        actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        present(actionSheet, animated: true, completion: nil)
     }
     
+    func sortOptions() {
+        let actionSheet = UIAlertController(title: "Sort", message: "Sort Options", preferredStyle: .actionSheet)
+        
+        actionSheet.addAction(UIAlertAction(title: "Hostname", style: .default, handler: { (alert) in
+            self.sortDescripter = HostSorter.hostname.sortDescriptor
+            self.updateQuery()
+        }))
+        
+        actionSheet.addAction(UIAlertAction(title: "Blocked", style: .default, handler: { (action) in
+            self.sortDescripter = HostSorter.blocked.sortDescriptor
+            self.updateQuery()
+        }))
+        
+        actionSheet.addAction(UIAlertAction(title: "Evaluated", style: .default, handler: { (action) in
+            self.sortDescripter = HostSorter.evaulated.sortDescriptor
+            self.updateQuery()
+        }))
+        
+        actionSheet.addAction(UIAlertAction(title: "Category", style: .default, handler: { (alert) in
+            self.sortDescripter = HostSorter.category.sortDescriptor
+            self.updateQuery()
+        }))
+        
+        actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        present(actionSheet, animated: true, completion: nil)
+    }
+        
     func shareSheet() {
         let defaultRealm = FileManager.default
         .containerURL(forSecurityApplicationGroupIdentifier: Constants.appGroupIdentifier)!
@@ -109,10 +192,13 @@ class HostsTableViewController: UITableViewController {
     }
     
     @IBAction func updateFilter(_ sender: Any) {
-        updateFilter()
+        filterOptions()
     }
     
-
+    @IBAction func updateSort(_ sender: UIBarButtonItem) {
+        sortOptions()
+    }
+    
     @IBAction func filterToggle(_ sender: UISwitch) {
         sender.isOn ? enable() : disable()
     }
@@ -253,6 +339,12 @@ class HostsTableViewController: UITableViewController {
             destinationController.allowedApps = host.allowedApps
             destinationController.blockedApps = host.blockedApps
             destinationController.host = host
+        } else if segue.identifier == "topHosts" {
+            let destinationController = segue.description
+            let allHostArray = realm.objects(Host.self).sorted(by: { (lhsData, rhsData) -> Bool in
+                return lhsData.apps.count > rhsData.apps.count
+            })
+            print("not done yet")
         }
     }
 
@@ -261,9 +353,11 @@ class HostsTableViewController: UITableViewController {
 extension HostsTableViewController {
     
     func checkForOnboarding() {
+        #if !targetEnvironment(simulator)
         if !UserDefaults.standard.bool(forKey: Constants.onboardingKey) {
             showOnboarding()
         }
+        #endif
     }
     
     func showOnboarding() {
@@ -300,3 +394,17 @@ extension HostsTableViewController {
         }
     }
 }
+
+extension HostsTableViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        if let text = searchController.searchBar.text, text.count > 0 {
+            predicate = NSPredicate(format: "hostname contains '\(text.lowercased())'")
+            updateQuery()
+        } else {
+            predicate = nil
+            updateQuery()
+        }
+    }
+}
+
+

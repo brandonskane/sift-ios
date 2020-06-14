@@ -16,15 +16,12 @@ class AppTableViewCell: UITableViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
         appImage.layer.cornerRadius = appImage.frame.size.width / 2
         appImage.clipsToBounds = true
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
     }
     
     func configureCellFor(app: App) {
@@ -38,14 +35,10 @@ class AppTableViewCell: UITableViewCell {
             switch result {
             case .success(let value):
                 print("Task done for: \(value.source.url?.absoluteString ?? "")")
-            case .failure(let error):
-//                print("Job failed: \(error.localizedDescription)")
+            case .failure(_):
                 self.appImage.kf.setImage(with: URL(string: "https://ui-avatars.com/api/?name=\(app.commonName).com"))
             }
         }
-//        appImage.kf.setImage(with: url) { (result, error) in
-//                print("error::: \(error)")
-//        }
     }
 
 }

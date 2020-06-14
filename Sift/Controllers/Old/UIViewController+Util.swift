@@ -2,7 +2,7 @@
 //  UIViewController+Util.swift
 //  Sift
 //
-//  Created by Brandon Kane on 12/23/17.
+//  Created by Brandon Kane on 6/7/20.
 //  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 

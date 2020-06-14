@@ -41,12 +41,13 @@ class Database {
         return FileManager.default.isReadableFile(atPath: fileURL.absoluteString)
     }
     
-    func getApp(bundleId: String) -> App {
+    func getApp(bundleId: String, ifExistsOnly: Bool = false) -> App? {
         let app = realm.object(ofType: App.self, forPrimaryKey: bundleId)
         //.filter("bundleId = '\(bundleId)'")
         if let existingApp = app {
             return existingApp
         } else {
+            guard !ifExistsOnly else { return nil }
             return createApp(bundleId: bundleId)
         }
     }
@@ -93,6 +94,7 @@ class Database {
         newHost.hostname = hostname
         newHost.isAllowed = isAllowed
         newHost.evaulated = !isAllowed
+        newHost.lastSeen = Date()
         if category != .uncategorized {
             newHost.category = category.rawValue
         }

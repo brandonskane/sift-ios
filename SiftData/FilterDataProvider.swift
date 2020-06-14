@@ -2,7 +2,7 @@
 //  FilterDataProvider.swift
 //  SiftData
 //
-//  Created by Brandon Kane on 12/23/17.
+//  Created by Brandon Kane on 6/7/20.
 //  Copyright © 2020 Brandon Kane. All rights reserved.
 //
 
@@ -44,16 +44,23 @@ class FilterDataProvider: NEFilterDataProvider {
         
         var verdict: NEFilterNewFlowVerdict = .allow()
         
-        if let host = host {
-            if let existingHost = Database(readOnly: true).getHost(hostname: host,
-                                                                   ifExistsOnly: true) {
-                verdict = existingHost.isAllowed ? NEFilterNewFlowVerdict.allow() : NEFilterNewFlowVerdict.drop()
-                print("have the host: \(existingHost.isAllowed)")
-            } else {
-                print("no existing host: needRules ")
+        if let host = host,
+            let existingHost = Database(readOnly: true).getHost(hostname: host,
+                                                                ifExistsOnly: true) {
+            if let existingApp = Database(readOnly: true).getApp(bundleId: app,
+                                                         ifExistsOnly: true) {
+                if existingHost.apps.contains(existingApp) { //we have seen this host and app before
+                    verdict = existingHost.isAllowed ? NEFilterNewFlowVerdict.allow() : NEFilterNewFlowVerdict.drop()
+                    print("have the host and app: \(existingHost.isAllowed)")
+                } else { //we have seen the host but never from this app
+                    print("existing host but have not seen this app use it yet: needRules ")
+                    verdict = .needRules()
+                }
+            } else { //we have seen this host but have never seen this app (regardless of host)
+                print("existing host but have not seen this app use it yet: needRules ")
                 verdict = .needRules()
             }
-        } else {
+        } else { //no url at all, can't make a verdict
             print("no URL?????????? .needRules()")
             verdict = .needRules()
         }
