@@ -118,7 +118,7 @@ class HostsTableViewController: UITableViewController {
         configure()
     }
     
-    func filterOptions() {
+    func filterOptions(sender: UIBarButtonItem) {
         let actionSheet = UIAlertController(title: "Filter", message: "Filter Options", preferredStyle: .actionSheet)
         
         actionSheet.addAction(UIAlertAction(title: "None", style: .default, handler: { (alert) in
@@ -148,10 +148,14 @@ class HostsTableViewController: UITableViewController {
         
         actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         
+        if UIDevice.isPad {
+            actionSheet.popoverPresentationController?.barButtonItem = sender
+        }
+        
         present(actionSheet, animated: true, completion: nil)
     }
     
-    func sortOptions() {
+    func sortOptions(sender: UIBarButtonItem) {
         let actionSheet = UIAlertController(title: "Sort", message: "Sort Options", preferredStyle: .actionSheet)
         
         actionSheet.addAction(UIAlertAction(title: "Hostname", style: .default, handler: { (alert) in
@@ -176,27 +180,19 @@ class HostsTableViewController: UITableViewController {
         
         actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         
+        if UIDevice.isPad {
+            actionSheet.popoverPresentationController?.barButtonItem = sender
+        }
+        
         present(actionSheet, animated: true, completion: nil)
     }
-        
-    func shareSheet() {
-        let defaultRealm = FileManager.default
-        .containerURL(forSecurityApplicationGroupIdentifier: Constants.appGroupIdentifier)!
-        .appendingPathComponent("data/default.realm")
 
-        let activityViewController = UIActivityViewController(activityItems: [defaultRealm] , applicationActivities: nil)
-
-        DispatchQueue.main.async {
-            self.present(activityViewController, animated: true, completion: nil)
-        }            
-    }
-    
-    @IBAction func updateFilter(_ sender: Any) {
-        filterOptions()
+    @IBAction func updateFilter(_ sender: UIBarButtonItem) {
+        filterOptions(sender: sender)
     }
     
     @IBAction func updateSort(_ sender: UIBarButtonItem) {
-        sortOptions()
+        sortOptions(sender: sender)
     }
     
     @IBAction func filterToggle(_ sender: UISwitch) {
@@ -232,66 +228,35 @@ class HostsTableViewController: UITableViewController {
         performSegue(withIdentifier: "showAppsForHost", sender: self)
     }
     
-//    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-//        let host = results[indexPath.row]
-//
-//        if host.isAllowed {
-//            let blockAction = UIContextualAction(style: .normal, title: "Block", handler: { (action, view, success) in
-//                Database.shared.markHostAsBlocked(host: host)
-//                Database.shared.markHostAsEvaulated(host: host)
-//            })
-//
-//            blockAction.backgroundColor = AppColors.deny.color
-//
-//            let evaluateAction = UIContextualAction(style: .normal, title: "Evaulate", handler: { (action, view, success) in
-//                Database.shared.markHostAsEvaulated(host: host)
-//            })
-//
-//            evaluateAction.backgroundColor = AppColors.allow.color
-//
-//            return UISwipeActionsConfiguration(actions: [blockAction, evaluateAction])
-//
-//        } else {
-//            let unblockAction = UIContextualAction(style: .normal, title: "Unblock", handler: { (action, view, success) in
-//                Database.shared.markHostAsUnblocked(host: host)
-//            })
-//            unblockAction.backgroundColor = AppColors.allow.color
-//            return UISwipeActionsConfiguration(actions: [unblockAction])
-//        }
-//
-//    }
-    
-    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
-
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let host = results[indexPath.row]
 
-        var actions: [UITableViewRowAction] = []
-
         if host.isAllowed {
-            let blockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Block", handler: { (action, indexPath) in
+            let blockAction = UIContextualAction(style: .normal, title: "Block", handler: { (action, view, success) in
                 Database.shared.markHostAsBlocked(host: host)
-//                Database.shared.markHostAsEvaulated(host: host)
+                Database.shared.markHostAsEvaulated(host: host)
+                success(true)
             })
 
             blockAction.backgroundColor = AppColors.deny.color
-            actions.append(blockAction)
 
-            let evaulateAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Evaulate", handler: { (action, indexPath) in
+            let evaluateAction = UIContextualAction(style: .normal, title: "Evaulate", handler: { (action, view, success) in
                 Database.shared.markHostAsEvaulated(host: host)
+                success(true)
             })
 
-            evaulateAction.backgroundColor = AppColors.allow.color
-            actions.append(evaulateAction)
+            evaluateAction.backgroundColor = AppColors.allow.color
+
+            return UISwipeActionsConfiguration(actions: [blockAction, evaluateAction])
+
         } else {
-            let unblockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Unblock", handler: { (action, indexPath) in
+            let unblockAction = UIContextualAction(style: .normal, title: "Unblock", handler: { (action, view, success) in
                 Database.shared.markHostAsUnblocked(host: host)
+                success(true)
             })
-
             unblockAction.backgroundColor = AppColors.allow.color
-            actions.append(unblockAction)
+            return UISwipeActionsConfiguration(actions: [unblockAction])
         }
-
-        return actions
     }
 
     /*
@@ -339,11 +304,11 @@ class HostsTableViewController: UITableViewController {
             destinationController.allowedApps = host.allowedApps
             destinationController.blockedApps = host.blockedApps
             destinationController.host = host
-        } else if segue.identifier == "topHosts" {
-            let destinationController = segue.description
-            let allHostArray = realm.objects(Host.self).sorted(by: { (lhsData, rhsData) -> Bool in
-                return lhsData.apps.count > rhsData.apps.count
-            })
+        } else if segue.identifier == "showTop" {
+//            let destinationController = segue.description
+//            let allHostArray = realm.objects(Host.self).sorted(by: { (lhsData, rhsData) -> Bool in
+//                return lhsData.apps.count > rhsData.apps.count
+//            })
             print("not done yet")
         }
     }
@@ -399,11 +364,11 @@ extension HostsTableViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         if let text = searchController.searchBar.text, text.count > 0 {
             predicate = NSPredicate(format: "hostname contains '\(text.lowercased())'")
-            updateQuery()
         } else {
             predicate = nil
-            updateQuery()
         }
+        
+        updateQuery()
     }
 }
 

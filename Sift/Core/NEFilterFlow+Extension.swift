@@ -18,14 +18,14 @@ extension NEFilterFlow {
         switch self {
         case let browserFlow as NEFilterBrowserFlow:
             return browserFlow.request?.url?.absoluteString
-        case let _ as NEFilterSocketFlow:
+//        case let _ as NEFilterSocketFlow:
 //            var endpoint = "unknown"
 //            if let neEndpoint = socketFlow.remoteEndpoint {
 //                endpoint = "\(neEndpoint)"
 //            }
 //
 //            return "socket: \(endpoint)"
-            return nil
+//            return nil
         default:
             return nil
         }

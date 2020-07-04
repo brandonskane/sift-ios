@@ -11,6 +11,7 @@ import RealmSwift
 class App: Object {
     @objc dynamic var bundleId = ""
     @objc dynamic var commonName = ""
+    @objc dynamic var seen = false
     let hosts = List<Host>()
     let allowedHosts = LinkingObjects(fromType: Host.self, property: "allowedApps")
     let blockedHosts = LinkingObjects(fromType: Host.self, property: "blockedApps")

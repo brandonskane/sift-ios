@@ -31,13 +31,9 @@ class HostsForAppTableViewController: UITableViewController {
             guard let tableView = self?.tableView else { return }
             switch changes {
             case .initial:
-                // Results are now populated and can be accessed without blocking the UI
                 tableView.reloadData()
             case .update(_, let deletions, let insertions, let modifications):
-                // Query results have changed, so apply them to the UITableView
                 tableView.beginUpdates()
-                // Always apply updates in the following order: deletions, insertions, then modifications.
-                // Handling insertions before deletions may result in unexpected behavior.
                 tableView.deleteRows(at: deletions.map({ IndexPath(row: $0, section: 0)}),
                                      with: .automatic)
                 tableView.insertRows(at: insertions.map({ IndexPath(row: $0, section: 0) }),
@@ -70,36 +66,35 @@ class HostsForAppTableViewController: UITableViewController {
         return cell
     }
     
-    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
-
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let host = results[indexPath.row]
 
-        var actions: [UITableViewRowAction] = []
-
         if host.isAllowed {
-            let blockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Block", handler: { (action, indexPath) in
+            let blockAction = UIContextualAction(style: .normal, title: "Block", handler: { (action, view, success) in
                 Database.shared.markHostAsBlocked(host: host)
+                Database.shared.markHostAsEvaulated(host: host)
+                success(true)
             })
 
             blockAction.backgroundColor = AppColors.deny.color
-            actions.append(blockAction)
 
-            let evaulateAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Evaulate", handler: { (action, indexPath) in
+            let evaluateAction = UIContextualAction(style: .normal, title: "Evaulate", handler: { (action, view, success) in
                 Database.shared.markHostAsEvaulated(host: host)
+                success(true)
             })
 
-            evaulateAction.backgroundColor = AppColors.allow.color
-            actions.append(evaulateAction)
+            evaluateAction.backgroundColor = AppColors.allow.color
+
+            return UISwipeActionsConfiguration(actions: [blockAction, evaluateAction])
+
         } else {
-            let unblockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Unblock", handler: { (action, indexPath) in
+            let unblockAction = UIContextualAction(style: .normal, title: "Unblock", handler: { (action, view, success) in
                 Database.shared.markHostAsUnblocked(host: host)
+                success(true)
             })
-
             unblockAction.backgroundColor = AppColors.allow.color
-            actions.append(unblockAction)
+            return UISwipeActionsConfiguration(actions: [unblockAction])
         }
-
-        return actions
     }
 
     /*

@@ -9,6 +9,25 @@
 import Foundation
 import CloudKit
 import Realm
+import UIKit
+
+extension UIDevice {
+    class var isPhone: Bool {
+        return UIDevice.current.userInterfaceIdiom == .phone
+    }
+
+     class var isPad: Bool {
+        return UIDevice.current.userInterfaceIdiom == .pad
+    }
+
+     class var isTV: Bool {
+        return UIDevice.current.userInterfaceIdiom == .tv
+    }
+
+     class var isCarPlay: Bool {
+        return UIDevice.current.userInterfaceIdiom == .carPlay
+    }
+}
 
 
 class Utilities {
@@ -24,6 +43,7 @@ class Utilities {
     }
     
     func saveRealm() {
+        
         uploadDatabaseToCloudDrive()
 //        let realmArchiveURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("test.realm")
 //        try! Database.shared.realm.writeCopy(toFile: realmArchiveURL!)

@@ -58,7 +58,6 @@ struct Constants {
             return "\(Constants.appURL)/\(self.rawValue)"
         }
     }
-
 }
 
 extension UserDefaults {

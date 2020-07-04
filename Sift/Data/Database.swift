@@ -14,7 +14,16 @@ class Database {
     static let shared = Database()
     
     init(readOnly: Bool = false) {
-        var config = Realm.Configuration()
+        var config = Realm.Configuration(
+        schemaVersion: 1,
+        migrationBlock: { migration, oldSchemaVersion in
+            // We haven’t migrated anything yet, so oldSchemaVersion == 0
+            if (oldSchemaVersion < 1) {
+                // Nothing to do!
+                // Realm will automatically detect new properties and removed properties
+                // And will update the schema on disk automatically
+            }
+        })
         
         let fileURL = FileManager.default
         .containerURL(forSecurityApplicationGroupIdentifier: Constants.appGroupIdentifier)!
@@ -43,7 +52,6 @@ class Database {
     
     func getApp(bundleId: String, ifExistsOnly: Bool = false) -> App? {
         let app = realm.object(ofType: App.self, forPrimaryKey: bundleId)
-        //.filter("bundleId = '\(bundleId)'")
         if let existingApp = app {
             return existingApp
         } else {

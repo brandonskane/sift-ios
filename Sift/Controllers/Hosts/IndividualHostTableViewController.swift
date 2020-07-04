@@ -53,27 +53,6 @@ class IndividualHostTableViewController: UITableViewController {
         
         return cell
     }
-
-    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
-        
-        var actions: [UITableViewRowAction] = []
-        
-        if indexPath.section == 0 {
-            let blockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Block", handler: { (action, indexPath) in
-            })
-            
-            blockAction.backgroundColor = AppColors.deny.color
-            actions.append(blockAction)
-        } else {
-            let unblockAction = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Unblock", handler: { (action, indexPath) in
-            })
-            
-            unblockAction.backgroundColor = AppColors.allow.color
-            actions.append(unblockAction)
-        }
-        
-        return actions
-    }
     
     /*
     // Override to support conditional editing of the table view.

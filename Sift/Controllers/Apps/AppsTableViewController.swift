@@ -42,13 +42,9 @@ class AppsTableViewController: UITableViewController {
             guard let tableView = self?.tableView else { return }
             switch changes {
             case .initial:
-                // Results are now populated and can be accessed without blocking the UI
                 tableView.reloadData()
             case .update(_, let deletions, let insertions, let modifications):
-                // Query results have changed, so apply them to the UITableView
                 tableView.beginUpdates()
-                // Always apply updates in the following order: deletions, insertions, then modifications.
-                // Handling insertions before deletions may result in unexpected behavior.
                 tableView.deleteRows(at: deletions.map({ IndexPath(row: $0, section: 0)}),
                                      with: .automatic)
                 tableView.insertRows(at: insertions.map({ IndexPath(row: $0, section: 0) }),
@@ -57,7 +53,6 @@ class AppsTableViewController: UITableViewController {
                                      with: .automatic)
                 tableView.endUpdates()
             case .error(let error):
-                // An error occurred while opening the Realm file on the background worker thread
                 fatalError("\(error)")
             }
         }
@@ -82,40 +77,50 @@ class AppsTableViewController: UITableViewController {
         return cell
     }
     
-        override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
-
-            let app = results[indexPath.row]
-
-            var actions: [UITableViewRowAction] = []
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let app = results[indexPath.row]
+        
+        let editAction = UIContextualAction(style: .normal, title: "Edit Common Name") { (action, view, success) in
             
-            let edit = UITableViewRowAction(style: UITableViewRowAction.Style.default, title: "Edit Common Name", handler: { (action, indexPath) in
-                
-                let alertController =  UIAlertController(title: "Update Common Name", message: "Update the common name for this application", preferredStyle: .alert)
-                
-                alertController.addTextField { (textField : UITextField!) -> Void in
-                    textField.placeholder = "New Common Name"
-                }
-                
-                alertController.addAction(UIAlertAction(title: "Reset", style: .default, handler: { (alert) in
-                    Database.shared.updateCommonNameFor(app: app)
-                }))
-                
-                alertController.addAction(UIAlertAction(title: "Save", style: .default, handler: { (alert) in
-                    let text = alertController.textFields![0].text!
-                    Database.shared.updateCommonNameFor(app: app, commonName: text)
-                    
-                }))
-                alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-                
-                self.present(alertController, animated: true, completion: nil)
-            })
-
-            edit.backgroundColor = AppColors.allow.color
-            actions.append(edit)
-
-            return actions
+            let alertController =  UIAlertController(title: "Update Common Name", message: "Update the common name for this application", preferredStyle: .alert)
+            
+            alertController.addTextField { (textField : UITextField!) -> Void in
+                textField.placeholder = "New Common Name"
+            }
+            
+            alertController.addAction(UIAlertAction(title: "Reset", style: .default, handler: { (alert) in
+                Database.shared.updateCommonNameFor(app: app)
+                success(true)
+            }))
+            
+            alertController.addAction(UIAlertAction(title: "Save", style: .default, handler: { (alert) in
+                let text = alertController.textFields![0].text!
+                Database.shared.updateCommonNameFor(app: app, commonName: text)
+                success(true)
+            }))
+            alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (alert) in
+                success(true)
+            }))
+            
+            self.present(alertController, animated: true, completion: nil)
         }
+        
+        editAction.backgroundColor = AppColors.allow.color
+        return UISwipeActionsConfiguration(actions: [editAction])
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let app = results[indexPath.row]
+        if !app.seen {
+            try! realm.write {
+                app.seen = true
+            }
+        }
+    }
 
+    @IBAction func showOptions(_ sender: UIBarButtonItem) {
+        showOptionsSheet(sender: sender)
+    }
     /*
     // Override to support conditional editing of the table view.
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
@@ -162,23 +167,55 @@ class AppsTableViewController: UITableViewController {
             destinationController.bundleId = app.bundleId
         }
     }
-    
-
 }
 
 extension AppsTableViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         if let text = searchController.searchBar.text, text.count > 0 {
             predicate = NSPredicate(format: "bundleId contains '\(text.lowercased())'")
-            updateFilter()
         } else {
             predicate = nil
-            updateFilter()
         }
+        updateFilter()
     }
     
     func updateFilter() {
         notificationToken?.invalidate()
         configure()
+    }
+}
+
+extension AppsTableViewController {
+    
+    
+    func showOptionsSheet(sender: UIBarButtonItem) {
+        let actionController = UIAlertController(title: "Options", message: "Select Options", preferredStyle: .actionSheet)
+        
+        actionController.addAction(UIAlertAction(title: "Reset Filters", style: .default, handler: { (alert) in
+            self.predicate = nil
+            self.updateFilter()
+        }))
+        
+        actionController.addAction(UIAlertAction(title: "Unseen Only", style: .default, handler: { (alert) in
+            self.predicate = NSPredicate(format: "seen = false")
+            self.updateFilter()
+        }))
+        
+        actionController.addAction(UIAlertAction(title: "Mark All As Seen", style: .default, handler: { (alert) in
+            for app in self.results {
+                guard !app.seen else { continue }
+                try! self.realm.write {
+                    app.seen = true
+                }
+            }
+        }))
+        
+        actionController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        if UIDevice.isPad {
+            actionController.popoverPresentationController?.barButtonItem = sender
+        }
+        
+        present(actionController, animated: true, completion: nil)
     }
 }

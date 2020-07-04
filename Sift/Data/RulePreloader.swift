@@ -176,4 +176,28 @@ class RulePreloader {
                                        category: .analytics)
         }
     }
+//    
+//    func test() {
+//        let realm = try! Realm()
+//        let results = realm.objects(App.self).sorted(byKeyPath: "hosts.@count")
+//        for result in results {
+//            print(result.hosts.count)
+//        }
+//    }
+    
+//    func clearOutMobileSafari() {
+//        let safariApp = Database.shared.getApp(bundleId: ".com.apple.mobilesafari")!
+//        let safariMobileApp = Database.shared.getApp(bundleId: ".com.apple.safarimobile")!
+//        
+//        try! Database.shared.realm.write {
+//            Database.shared.realm.delete([safariApp, safariMobileApp])
+//        }       
+////        let hosts = safariApp.hosts
+////        for host in hosts {
+////            guard host.apps.count == 1 else { continue }
+////            try! Database.shared.realm.write {
+////                Database.shared.realm.delete(host)
+////            }
+////        }
+//    }
 }

@@ -20,7 +20,7 @@ extension AppDelegate {
             return
         }
         
-        var rule: Rule
+//        let rule: Rule
 
         guard let action = Constants.NotificationAction(rawValue: response.actionIdentifier)
         else {
@@ -36,11 +36,11 @@ extension AppDelegate {
             completionHandler()
             return
             
-        case .allowApp:
-            rule = Rule(ruleType: .app(app), isAllowed: true)
+        case .allowApp: break
+//            rule = Rule(ruleType: .app(app), isAllowed: true)
             
-        case .denyApp:
-            rule = Rule(ruleType: .app(app), isAllowed: false)
+        case .denyApp: break
+//            rule = Rule(ruleType: .app(app), isAllowed: false)
 
         default:
             print("unknown action response: \(response.actionIdentifier)")
@@ -48,12 +48,12 @@ extension AppDelegate {
             return
         }
         
-        do {
+//        do {
 //            try RuleManager().create(rule: rule)
             AppDelegate.removeNotifications(for: app)
-        } catch {
-            print("error saving rule: \(error)")
-        }
+//        } catch {
+//            print("error saving rule: \(error)")
+//        }
         
         completionHandler()
     }

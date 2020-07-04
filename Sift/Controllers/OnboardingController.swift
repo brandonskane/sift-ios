@@ -85,12 +85,10 @@ class OBNetworkPermissionsController: UIViewController {
             
         })
     }
-    
 }
 
 
 class OBTutorialController:UIViewController {
-        
     override func viewDidLoad() {
         super.viewDidLoad()        
         UserDefaults.standard.set(true, forKey: Constants.onboardingKey)
@@ -104,5 +102,3 @@ class OBTutorialController:UIViewController {
         self.navigationController?.dismiss(animated: true, completion: nil)
     }
 }
-
-
